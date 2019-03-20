@@ -1,0 +1,590 @@
+<!-- 
+DESCRIPTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>exp</title>
+  <script src="jspsych-6.0.3/jspsych.js"></script>
+  <script src="jspsych-6.0.3/plugins/jspsych-fullscreen.js"></script>
+  <script src="jspsych-6.0.3/plugins/jspsych-html-keyboard-response.js"></script>
+  <script src="jspsych-6.0.3/plugins/jspsych-html-button-response.js"></script>
+  <script src="jspsych-6.0.3/plugins/jspsych-survey-text.js"></script>
+  <script src="jspsych-6.0.3/plugins/jspsych-survey-likert.js"></script>
+  <script src="jspsych-6.0.3/plugins/jspsych-survey-multi-choice.js"></script>
+  <script src="js/jspsych-html-slider-response_required.js"></script>
+  <script src="js/jquery.min.js"></script>
+  <script src="js/lodash.min.js"></script>
+  <script src="js/firebase.js"></script>
+  <link href="jspsych-6.0.3/css/jspsych.css" rel="stylesheet" type="text/css">
+  <style>
+  body {
+    cursor: default;
+  }
+  #jspsych-html-slider-response-next {
+    margin: 0px;
+  }
+  .imgJudge {
+    width: 300px;
+    margin: 0px;
+    padding: 0px;
+  }
+  .jspsych-content-wrapper {
+    width: 800px;
+    height: 600px;
+  }
+</style>
+</head>
+<body></body>
+<script>
+  /* Parameters */
+  var n = 5; // number of CIs randomly sampled for each cell
+  var githubCIs = 'https://raw.githubusercontent.com/marinerougier/Indiv_Avg_CIs_ExpeFeed/master/'; // github CIs path
+
+
+  /* Initial variables */
+  var timeline = [];
+  var preloadimages = [];
+  var prolificID = jsPsych.data.getURLVariable("prolificID"); // Need to add ?prolificID={{%PROLIFIC_PID%}} at the end of the prolific survey link!
+
+  // Preview CIs
+  var CIs_preview = [
+  "ci_avg_av_ssFeed_faceId_5P4A8B6S.jpg",
+  "ci_avg_app_Feed_faceId_2P3B7Q9T.jpg",
+  "ci_avg_av_ssFeed_faceId_9N7C5G9A.jpg",
+  "ci_avg_av_Feed_faceId_7O0D5E9M.jpg",
+  "ci_avg_av_Feed_faceId_2P3B7Q9T.jpg",
+  "ci_avg_av_Feed_faceId_2Q1Q5Q2R.jpg",
+  "ci_avg_app_Feed_faceId_7P8D2L6D.jpg",
+  "ci_avg_av_Feed_faceId_0C9G9A7E.jpg",
+  "ci_avg_app_ssFeed_faceId_3UOE3D1V.jpg",
+  "ci_avg_app_ssFeed_faceId_1J6R2NOU.jpg",
+  "ci_avg_app_Feed_faceId_2S3X3O7T.jpg",
+  "ci_avg_av_Feed_faceId_1J5K2R2Z.jpg",
+  "ci_avg_av_Feed_faceId_OB7Q7I1Z.jpg",
+  "ci_avg_av_Feed_faceId_5L3Z2G5G.jpg",
+  "ci_avg_av_ssFeed_faceId_2D2S2B9Y.jpg",
+  "ci_avg_app_Feed_faceId_7U5D2U7F.jpg",
+  "ci_avg_app_Feed_faceId_4Z0Z0R5R.jpg",
+  "ci_avg_app_ssFeed_faceId_OR4N0L3O.jpg",
+  "ci_avg_app_Feed_faceId_1G4V1K6K.jpg",
+  "ci_avg_app_ssFeed_faceId_5E6B7K3Q.jpg"
+  ];
+
+  CIs_preview = CIs_preview.map(function(e) {return githubCIs + e}); // add URL path
+  preloadimages.push(CIs_preview);
+  CIs_preview = CIs_preview.map(function(e) {return {imgHtml: "<img class='imgJudge' src='" + e + "'>"}});
+
+  // Conditions IDs
+  var cis_Feed = [
+	"0C9G9A7E",
+	"0F0Q0U7N",
+	"0F2F3U8F",
+	"0V8P3T1H",
+	"0X0B3E8K",
+	"0Y1F7K7X",
+	"1B5D3V0O",
+	"1BOA2F7G",
+	"1F9X4C1P",
+	"1G4V1K6K",
+	"1H6T3E1J",
+	"1J5K2R2Z",
+	"1J7E4X8J",
+	"1J8E8Z9F",
+	"1L8J3K7C",
+	"1S8X6B8X",
+	"1T7G8B5M",
+	"1V9A6G3P",
+	"1X4F7D3H",
+	"2L7U3K4S",
+	"2N4J7Q4B",
+	"2P3B7Q9T",
+	"2Q1Q5Q2R",
+	"2QOJ8M4D",
+	"2S3X3O7T",
+	"2T4J1C6R",
+	"2V6I4XP",
+	"2ZOROU5Y",
+	"3I5R1E5A",
+	"3K8G8M9K",
+	"3P4U7B9Z",
+	"3P8U6C8B",
+	"3U9I9P7W",
+	"3V6D4O8Z",
+	"3Y1K7R9L",
+	"4L8Z3N6D",
+	"4S6D4M2S",
+	"4U2G1V4P",
+	"4U7D1L7G",
+	"4V1X2I1U",
+	"4W9C3D8A",
+	"4Z0Z0R5R",
+	"4Z1V5Y6W",
+	"4Z2D2Z3U",
+	"5D8D8R6D",
+	"5E3E0J1M",
+	"5FOX4E4B",
+	"5K7C9B3R",
+	"5K7U1M0G",
+	"5L3Z2G5G",
+	"5L5V8L7X",
+	"5M0B5U6F",
+	"5Q7D4J6Y",
+	"5U4Z0Q91",
+	"5V2H6V4U",
+	"6Q7U1X3X",
+	"6T8D9V8O",
+	"6V0V6I40",
+	"6W9M5J3M",
+	"7C8H1S9T",
+	"7E8Q8Z6B",
+	"7KOR9D3R",
+	"7M6U9W4W",
+	"7N4Z6V3Z",
+	"7O0D5E9M",
+	"7P8D2L6D",
+	"7Q7D0T8A",
+	"7R1Q5B4Y",
+	"7S1J7K5J",
+	"7T2C0A1S",
+	"7U4P0B4D",
+	"7U5C7F0Z",
+	"7U5D2U7F",
+	"7ZOI9P3Y",
+	"8C6F7U3Q",
+	"8I8G6A1Z",
+	"8I9R6W8U",
+	"8K5F1S4Y",
+	"8Q9P6F0Q",
+	"9G8B6H0Q",
+	"9H7A418V",
+	"9H9A0A7X",
+	"9I6A9H2B",
+	"9J6A4K0P",
+	"9N3B3P5X",
+	"9X8G7M0V",
+	"OB7Q7I1Z",
+	"OD1D9R6T"
+  ];
+
+
+  var cis_ssFeed = [
+	"0D2V1U0X",
+	"0K2T6U2H",
+	"0O1X9P0J",
+	"0S8Q2B4R",
+	"0X7I6A0A",
+	"1J6R2NOU",
+	"1Y4H6E5B",
+	"203U16L",
+	"2D2S2B9Y",
+	"2G5B7D6R",
+	"2H9S1J6X",
+	"2J6G0F5G",
+	"2K8Y1M9V",
+	"2L0Q6P2K",
+	"2N6H0G3X",
+	"2NOY9B7E",
+	"3B1E8N5E",
+	"3B3K0I2X",
+	"3D6P4L3S",
+	"3D904U2X",
+	"3E4C5G3L",
+	"3G6O6C4O",
+	"3L4Q6F0C",
+	"3R6C8R1C",
+	"3T9E6X9L",
+	"3U1B1L7A",
+	"3U8J1W0I",
+	"3UOE3D1V",
+	"3Z2H6W7R",
+	"4COP8G3Z",
+	"4E5W4R6F",
+	"4I8R5Z1D",
+	"4M3D7V9",
+	"4M5L5E6H",
+	"4P2A8P5A",
+	"4U0E3K5H",
+	"4U3W8A0V",
+	"5E6B7K3Q",
+	"5E7T3A7S",
+	"5G5E9V0M",
+	"5P4A8B6S",
+	"5P9S4B8U",
+	"5T6NOAOQ",
+	"5U4Y7C3K",
+	"5W9R7H5J",
+	"6C7M2X7P",
+	"6I5R6A0U",
+	"6I8D9E7B",
+	"6M5D6N2G",
+	"6Z2V1H6F",
+	"7B5A4P4U",
+	"7E2R5J0F",
+	"7F7G3R4Y",
+	"7H1LR3O",
+	"7K5Z0P1G",
+	"7L2F7N5K",
+	"7L5W3J7D",
+	"7L5W9K3X",
+	"7S2E1J7Y",
+	"7V907C2N",
+	"804Y5G1C",
+	"8G7W8W3S",
+	"8J5H7N5N",
+	"8K8P4O4I",
+	"8N9A6J9B",
+	"8Q6J7D5L",
+	"8R5W4B4F",
+	"8W9M7G4V",
+	"9C5Y7Y2I",
+	"9N7C5G9A",
+	"9S4E9F7F",
+	"9S4J0V3K",
+	"9T5R7L9M",
+	"9Y3N0T6W",
+	"9Z6O7W7U",
+	"OE2C1T3F",
+	"OIOI1W5C",
+	"OR4N0L3O"
+  ];
+
+    // Condition-level average CIs
+  var CIs_avg = [
+  "ci_avg_App_Feed.jpeg",
+  "ci_avg_App_ssFeed.jpeg",
+  "ci_avg_Av_Feed.jpeg",
+  "ci_avg_Av_ssFeed.jpeg"
+  ];
+
+  // Randomly pick n faceIds from the two conditions
+  cis_Feed = _.sampleSize(cis_Feed, n);
+  cis_ssFeed = _.sampleSize(cis_ssFeed, n);
+
+  // Approach / avoidance 
+  cis_feed_app = cis_Feed.map(function(e) {return githubCIs + "ci_avg_app_Feed_faceId_" + e + '.jpg'});
+  cis_feed_avd = cis_Feed.map(function(e) {return githubCIs + "ci_avg_av_Feed_faceId_" + e + '.jpg'});
+  cis_ssfeed_app = cis_ssFeed.map(function(e) {return githubCIs + "ci_avg_app_ssFeed_faceId_" + e + '.jpg'});
+  cis_ssfeed_avd = cis_ssFeed.map(function(e) {return githubCIs + "ci_avg_av_ssFeed_faceId_" + e + '.jpg'});
+
+  var CIsStims = _.flattenDeep([cis_feed_app, cis_feed_avd, cis_ssfeed_app, cis_ssfeed_avd]);
+  preloadimages.push(CIsStims);
+
+  // CIs stims for individual-level CIs
+  CIsStims = CIsStims.map(function(e) {return {imgHtml: "<img class='imgJudge' src='" + e + "'>"}});
+  CIsStims = _.shuffle(CIsStims); // randomize order
+
+    // CIs stims for condition-level avg CIs
+
+  CIs_avg = CIs_avg.map(function(e) {return githubCIs + e}); // add URL path
+  var CIsStims_avg = _.flattenDeep([CIs_avg]);
+  preloadimages.push(CIsStims_avg);
+
+  CIsStims_avg = CIsStims_avg.map(function(e) {return {imgHtml: "<img class='imgJudge' src='" + e + "'>"}});
+  CIsStims_avg = _.shuffle(CIsStims_avg); // randomize order
+
+  // EXPERIMENT --------------------------------------------------------------------------------------------------------
+
+  /* FULL SCREEN MODE */
+  var activeFullscreen = {
+    message: "",
+    button_label: "Veuillez cliquer ici pour activer le mode plein écran",
+    type: 'fullscreen',
+    fullscreen_mode: true,
+    delay_after: 200,
+  };
+
+  /* CONSENT */
+  var consent = {
+    type: 'html-button-response',
+    stimulus: function() {
+        html = "";
+        html += "<h1>Consentement éclairé</h1>";
+        html += "<p class='justify'>Dans cette étude, vous allez devoir évaluer des visages sur plusieurs traits. ";
+        html += "La durée de cette étude est d'environ <strong>10 minutes</strong>. Durant cette période, ";
+        html += "il est important que vous restiez pleinement <strong>concentré.e</strong>.</p>";
+        html += "<p class='justify'>Votre participation est volontaire, n'implique aucun risque, et vos réponses seront ";
+        html += "enregistrées de manière anonyme. Vous êtes libre de vous retirer de l'étude à tout moment. Après avoir ";
+        html += "complété l'entièreté de l'étude, vous recevrez une <strong>compensation monétaire</strong> ";
+        html += "tel que décrit dans l'annonce Foule Factory.</p>";
+        html += "<p class='justify'>Cette étude est administrée par Marine Rougier, post-doctorante à l'UCLouvain (Belgique). ";
+        html += "Si vous avez des questions ou commentaires, contactez-moi à l'adresse suivante : <strong>marine.rougier@uclouvain.be</strong></p>";
+        return html;
+    },
+    choices: ["J'accepte de participer à cette étude"],
+  };
+
+  /* PREVIEW CIS INSTRUCTIONS */
+  var previewCIinst = {
+    type: "html-keyboard-response",
+    post_trial_gap: 300,
+    choices: [32],
+    stimulus: function() {
+      var html = "";
+      html += "<h1>Evaluation des visages</h1>";
+      html += "<p class='justify'>Dans cette étude, vous allez devoir <b>évaluer des visages</b> (44 visages en tout) et indiquer, pour "
+      html += "chacun d'entre eux, à quel point celui-ci vous paraît <b>aggressif, digne de confiance</b> et ";
+      html += "<b>criminel</b> (de 0 = pas du tout à 100 = totalement) </br> ";
+      html += "Comme vous allez le voir, les visages qui vous seront présentés ont été rendus ";
+      html += "<b>flous</b> afin de rendre la tâche moins aisée. </br></br>";
+      html += "Notez qu'il est <b>extrêmement important</b> que vous répondiez aussi honnêtement et ";
+      html += "spontanément que possible. La première réponse qui vient à l'esprit est généralement la meilleure. </br></br>";
+      html += "Avant la tâche d’évaluation, un échantillon de 20 visages ";
+      html += "va vous être présenté (chaque visage apparaitra durant une seconde). Ceci vous permettra de mieux ";
+      html += "prendre en compte les similarités/différences entre les visages avant leur évaluation.</br></br>";
+      html += "Les visages défileront automatiquement, veuillez être attentif.</br></br>";
+      html += "<p></br>appuyez sur <span class='light-keys'><kbd>espace</kbd></span> pour commencer</p>";
+      return html;
+    },
+  };
+
+  /* PREVIEW CIS */
+  var previewCI = {
+    timeline_variables: CIs_preview,
+    choices: jsPsych.NO_KEYS,
+    trial_duration: 800,
+    post_trial_gap: 100,
+    timeline: [{
+      type: 'html-keyboard-response',
+      stimulus: function() {return jsPsych.timelineVariable('imgHtml', true)},
+    }]
+  };
+
+  /* JUDGMENTS INSTRUCTIONS for individual CIs */
+  var jugmentInst_indiv = {
+    type: "html-keyboard-response",
+    post_trial_gap: 300,
+    choices: [32],
+    stimulus: function() {
+      var html = "";
+      html += "<h1>Evaluation des visages</h1>";
+      html += "<p class='justify'>Maintenant que des exemples de visages vous ont été présentés, ";
+      html += "vous allez devoir évaluer un premier échantillon de <b>40 visages.</b> ";
+      html += "Pour rappel vous devrez indiquer pour chaque visage à quel point celui-ci vous paraît ";
+      html += "<b>aggressif, digne de confiance</b> et <b>criminel</b> (de 0 = pas du tout à 100 = totalement). </br> ";
+      html += "Essayez de répondre aussi <b> honnêtement et spontanément que possible.</b></br></br>";
+      html += "Une fois que vous aurez fini d'évaluer ce premier échantillon de visages, vous devrez ensuite évaluer un deuxième ";
+      html += "échantillon composé de 4 visages.</br></br>";
+      html += "<p></br>appuyez sur <span class='light-keys'><kbd>espace</kbd></span> pour commencer</p>";
+      return html;
+    },
+  };
+
+
+  // Judgments for individual CIs
+
+  var scaleAgressivity = ["0</br>Pas du tout agressif", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100</br>Totalement agressif"];
+  var scaleTrustworthiness = ["0</br>Pas du tout digne de confiance", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100</br>Totalement digne de confiance"];
+  var scaleCriminality = ["0</br>Pas du tout criminel", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100</br>Totalement criminel"];
+
+  var judgments_indiv = [];
+  CIsStims.map(function(ciImg){
+    var likert_trial = {
+        type: 'survey-likert',
+        preamble: ciImg.imgHtml,
+        questions: [
+          {prompt: "", labels: scaleAgressivity, required: true},
+          {prompt: "", labels: scaleTrustworthiness, required: true},
+          {prompt: "", labels: scaleCriminality, required: true},
+        ],
+        button_label: 'Continuer',
+        on_load: function() {
+          $(".jspsych-content").css("max-width", "100%");
+          $(".jspsych-survey-likert-statement").css("margin", "0px");
+          $(".jspsych-survey-likert-statement").css("padding", "0px");
+          $(".jspsych-survey-likert-opts").css("padding", "0 0 10px");
+          $("#jspsych-survey-likert-next").css("margin-top", "10px");
+          $("#jspsych-survey-likert-form").css("width", "800px");
+          $("li").css("width", "9%");
+        //   $("li:first-of-type").css("width", "110px");
+        //   $("li:last-of-type").css("width", "110px");
+        },
+        on_finish: function(data) {
+          var parsed_response  = JSON.parse(data.responses);
+          data.agressivity     = parsed_response.Q0 * 10;
+          data.trustworthiness = parsed_response.Q1 * 10;
+          data.criminality     = parsed_response.Q2 * 10;
+          data.ci              = ciImg.imgHtml;
+        },
+    };
+    judgments_indiv.push(likert_trial);
+  });
+
+
+
+  /* JUDGMENTS INSTRUCTIONS for avg CIs */
+
+  var jugmentInst_avg = {
+    type: "html-keyboard-response",
+    post_trial_gap: 300,
+    choices: [32],
+    stimulus: function() {
+      var html = "";
+      html += "<h1>Evaluation des visages</h1>";
+      html += "<p class='justify'>Vous avez terminé d'évaluer le premier échantillon de 40 visages. ";
+      html += "Vous allez maintenant devoir évaluer un nouvel échantillon de <b>4 visages.</b></br>  ";
+      html += "Les consignes ne changent pas : vous devrez indiquer pour chaque visage à quel point celui-ci vous paraît ";
+      html += "<b>aggressif, digne de confiance</b> et <b>criminel</b> (de 0 = pas du tout à 100 = totalement). </br> ";
+      html += "Comme précédemment, essayez de répondre aussi <b>honnêtement et spontanément que possible.</b></br></br>";
+      html += "<p></br>appuyez sur <span class='light-keys'><kbd>espace</kbd></span> pour commencer</p>";
+      return html;
+    },
+        on_load: function() {
+          $(".jspsych-content").css("max-width", "90%");
+       //   $(".jspsych-survey-likert-statement").css("margin", "0px");
+       //   $(".jspsych-survey-likert-statement").css("padding", "0px");
+       //   $(".jspsych-survey-likert-opts").css("padding", "0 0 10px");
+       //   $("#jspsych-survey-likert-next").css("margin-top", "10px");
+       //   $("#jspsych-survey-likert-form").css("width", "800px");
+       //   $("li").css("width", "9%");
+       }
+  };
+
+
+// Judgments for condition-level average CIs
+
+  var judgments_avg = [];
+  CIsStims_avg.map(function(ciImg){
+    var likert_trial = {
+        type: 'survey-likert',
+        preamble: ciImg.imgHtml,
+        questions: [
+          {prompt: "", labels: scaleAgressivity, required: true},
+          {prompt: "", labels: scaleTrustworthiness, required: true},
+          {prompt: "", labels: scaleCriminality, required: true},
+        ],
+        button_label: 'Continuer',
+        on_load: function() {
+          $(".jspsych-content").css("max-width", "100%");
+          $(".jspsych-survey-likert-statement").css("margin", "0px");
+          $(".jspsych-survey-likert-statement").css("padding", "0px");
+          $(".jspsych-survey-likert-opts").css("padding", "0 0 10px");
+          $("#jspsych-survey-likert-next").css("margin-top", "10px");
+          $("#jspsych-survey-likert-form").css("width", "800px");
+          $("li").css("width", "9%");
+        //   $("li:first-of-type").css("width", "110px");
+        //   $("li:last-of-type").css("width", "110px");
+        },
+        on_finish: function(data) {
+          var parsed_response  = JSON.parse(data.responses);
+          data.agressivity     = parsed_response.Q0 * 10;
+          data.trustworthiness = parsed_response.Q1 * 10;
+          data.criminality     = parsed_response.Q2 * 10;
+          data.ci              = ciImg.imgHtml;
+        },
+    };
+    judgments_avg.push(likert_trial);
+  });
+
+
+
+  /* AGE */
+  var age = {
+      timeline: [{
+        type: 'survey-text',
+        questions: [{prompt: "Veuillez indiquer votre âge :", rows: 1, columns: 10}],
+        button_label: "Continuer",
+      }],
+      loop_function: function(data){ 
+        var age = data.values()[0].responses;
+        var age = JSON.parse(age).Q0; 
+        if(age == ""){
+          alert("Veuillez indiquer votre âge !"); 
+          return true; 
+        }
+      },
+      on_finish: function(data) {
+          jsPsych.data.addProperties({
+              age: JSON.parse(data.responses)["Q0"],
+          });
+      },
+  };
+
+  var gender = {
+      type: 'survey-multi-choice',
+      questions: [{prompt: "Veuillez indiquer votre genre :", options: [' homme', ' femme', ' autre'], required: true}],
+      button_label: "Continuer",
+      on_finish: function(data) {
+          jsPsych.data.addProperties({
+              gender: JSON.parse(data.responses)["Q0"],
+          });
+      },
+  };
+
+  /* EXIT FULLSCREEN MODE */
+  var exitFullscreen = {
+    type: 'fullscreen',
+    fullscreen_mode: false
+  };
+
+  /* DEBRIEF */
+  var debrief = [];
+  debrief += "<h1>Fin de l'expérience</h1>";
+  debrief += "<p class='justify'>Merci pour votre participation ! Cette étude avait pour but d'étudier la perception générale ";
+  debrief += "qu'ont les individus de visages inconnus et ambigus.</br></br> "
+  debrief += "<b>Veuillez copier le code suivant sur Foule Factory pour valider votre participation :</b></p> ";
+  debrief += "<h1>YAKD19TRE</h1>";
+  //debrief += "<a href='https://www.google.com/' target='_blank'>cliquer ici pour valider votre expérience</a>";
+
+  // TIMELINE ----------------------------------------------------------------------------------------------------------
+  timeline.push(activeFullscreen);
+  timeline.push(consent);
+  timeline.push(previewCIinst);
+  timeline.push(previewCI);
+  timeline.push(jugmentInst_indiv);
+  timeline.push(judgments_indiv);
+  timeline.push(jugmentInst_avg);
+  timeline.push(judgments_avg);
+  timeline.push(age);
+  timeline.push(gender);
+  timeline.push(exitFullscreen);
+  
+  timeline = _.flattenDeep(timeline); // do not remove this!
+
+  // INITIALISE EXP ----------------------------------------------------------------------------------------------------
+  jsPsych.init({
+    timeline: timeline,
+    preload_images: preloadimages,
+    max_load_time: 500*1000,
+    exclusions: {
+      min_width: 800,
+      min_height: 600,
+    },
+    on_finish: function(data) { 
+      $("#jspsych-content").html("<img src='https://i.gifer.com/4V0b.gif'>");
+
+      /* Initialize Firebase */
+      var config = {
+        apiKey: "AIzaSyBwDr8n-RNCbBOk1lKIxw7AFgslXGcnQzM",
+        databaseURL: "https://marineexpe.firebaseio.com/"
+      };
+
+      firebase.initializeApp(config);
+      var database = firebase.database();
+      id = jsPsych.randomization.randomID(15); // short ID
+
+      /* jsPsych: add data to every trial */
+      jsPsych.data.addProperties({
+        prolificID: prolificID,
+        id: id,
+        //traitsOrder: traitsOrder,
+        totalTime: jsPsych.totalTime()
+      });
+
+      var subdata = data.filter({trial_type: 'survey-likert'}).csv();
+    //   jsPsych.data.displayData();
+
+      /* Send data to Firebase and redirect to Qualtrics */
+      database.ref("judgeMarine_ExpeSheyenne/" + id + "/").update({subdata}).then(function() { 
+        console.log("data sent!");
+        $("#jspsych-content").html(debrief);
+        //window.location = qlink; // redirect to qualtrics
+      });
+    }
+  });
+</script>
+
+</html>
